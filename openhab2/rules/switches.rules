@@ -1,40 +1,37 @@
-val Functions$Function2<SwitchItem, SwitchItem, Void> handleShortPress =  [SwitchItem lightBulbSwitch, SwitchItem toggleLightOnMotion |
+val Functions$Function4<SwitchItem, SwitchItem, StringItem, Void> handleShortPress =  [ SwitchItem lightBulbSwitch, SwitchItem toggleLightOnMotion, StringItem lightBulbAlert, boolean enableToggleOnLightOff |
+	logDebug("switches.rules", "handleShortPress()");
 	
-	logDebug("switches.rules", "lightBulbSwitch.state: " + lightBulbSwitch.state);
-	logDebug("switches.rules", "toggleLightOnMotion.state: " + toggleLightOnMotion.state);
-	
-	var shouldTurnLightOn = (lightBulbSwitch.state == OFF);
-	
-	var shouldTurnLightOff = (lightBulbSwitch.state == ON) && 
-							 (toggleLightOnMotion.state == OFF);
-							 
-	var shouldDisableMotionControl = (lightBulbSwitch.state == ON) && 
-									 (toggleLightOnMotion.state == ON);
-									 
-	logDebug("switches.rules", "shouldTurnLightOn: " + shouldTurnLightOn);
-	logDebug("switches.rules", "shouldTurnLightOff: " + shouldTurnLightOff);
-	logDebug("switches.rules", "shouldDisableMotionControl: " + shouldDisableMotionControl);
-	
-	if (shouldTurnLightOn)
+	if (lightBulbSwitch.state == OFF)
 	{
-		sendCommand(lightBulbSwitch, ON)
-		sendCommand(toggleLightOnMotion, OFF)
+		logDebug("switches.rules", "turning light ON and disabling toggleLightOnMotion...");
+		sendCommand(lightBulbSwitch, ON);
+		sendCommand(toggleLightOnMotion, OFF);
 	}
-	
-	if (shouldTurnLightOff)
+	else
 	{
-		sendCommand(lightBulbSwitch, OFF)
-	}
-	
-	if (shouldDisableMotionControl)
-	{
-		sendCommand(toggleLightOnMotion, OFF)
+		if (toggleLightOnMotion.state == OFF)
+		{
+			logDebug("switches.rules", "turning light OFF...");
+			sendCommand(lightBulbSwitch, OFF);
+			
+			if (enableToggleOnLightOff)
+			{
+				logDebug("switches.rules", "enabling automatic mode...");
+				sendCommand(toggleLightOnMotion, ON);
+			}
+		}
+		else
+		{
+			logDebug("switches.rules", "disabling automatic mode...");
+			sendCommand(toggleLightOnMotion, OFF);
+			sendCommand(lightBulbAlert, "SELECT");
+		}
 	}
 ]
 
-
 val Functions$Function4<SwitchItem, DimmerItem, StringItem, SwitchItem, Void> handleDoublePress =  [SwitchItem lightBulbSwitch, DimmerItem lightBulbDimmer, StringItem lightBulbAlert, SwitchItem toggleLightOnMotion |
-			
+	logDebug("switches.rules", "handleDoublePress()");
+
 	var shouldDisableMotionControl = (lightBulbSwitch.state == OFF);
 	var shouldSetMaxBrightness = (lightBulbSwitch.state == ON);
 	
@@ -51,6 +48,7 @@ val Functions$Function4<SwitchItem, DimmerItem, StringItem, SwitchItem, Void> ha
 ]
 
 val Functions$Function1<DimmerItem, Void> handleLongPress =  [DimmerItem lightBulbDimmer |
+	logDebug("switches.rules", "handleLongPress()");
 
 	var newBrightness = (lightBulbDimmer.state as DecimalType) + 20;
 			
@@ -72,17 +70,25 @@ then
     switch(actionName) {
 	
         case "SHORT_PRESSED": {
-			logInfo("switches.rules", "Short pressed switch_quarto_pedro");
-			handleShortPress.apply(hue_quarto_pedro_switch, EnableLightOnMotion_QuartoPedro);
+			logDebug("switches.rules", "Short pressed switch_quarto_pedro");
+			
+			if (now.getHourOfDay > 0 && now.getHourOfDay < 8)
+			{
+				handleShortPress.apply(hue_quarto_pedro_switch, EnableLightOnMotion_QuartoPedro, hue_quarto_pedro_alert, false);
+			}
+			else
+			{
+				handleShortPress.apply(hue_quarto_pedro_switch, EnableLightOnMotion_QuartoPedro, hue_quarto_pedro_alert, true);
+			}
         }
 		
         case "DOUBLE_PRESSED": {
-			logInfo("switches.rules", "Double pressed switch_quarto_pedro");
+			logDebug("switches.rules", "Double pressed switch_quarto_pedro");
 			handleDoublePress.apply(hue_quarto_pedro_switch, hue_quarto_pedro_brightness, hue_quarto_pedro_alert, EnableLightOnMotion_QuartoPedro);
         }
 		
         case "LONG_PRESSED": {
-			logInfo("switches.rules", "Long pressed switch_quarto_pedro");
+			logDebug("switches.rules", "Long pressed switch_quarto_pedro");
 			handleLongPress.apply(hue_quarto_pedro_brightness);
         }
 		
@@ -101,17 +107,17 @@ then
 	switch(actionName) {
 	
         case "SHORT_PRESSED": {
-			logInfo("switches.rules", "Short pressed switch_sala_jantar");
-			handleShortPress.apply(hue_sala_jantar_switch, EnableLightOnMotion_SalaDeJantar);
+			logDebug("switches.rules", "Short pressed switch_sala_jantar");
+			handleShortPress.apply(hue_sala_jantar_switch, EnableLightOnMotion_SalaDeJantar, hue_sala_jantar_alert, true);
         }
 		
         case "DOUBLE_PRESSED": {
-			logInfo("switches.rules", "Double pressed switch_sala_jantar");
+			logDebug("switches.rules", "Double pressed switch_sala_jantar");
 			handleDoublePress.apply(hue_sala_jantar_switch, hue_sala_jantar_brightness, hue_sala_jantar_alert, EnableLightOnMotion_SalaDeJantar);
         }
 		
         case "LONG_PRESSED": {
-			logInfo("switches.rules", "Long pressed switch_sala_jantar");
+			logDebug("switches.rules", "Long pressed switch_sala_jantar");
 			handleLongPress.apply(hue_sala_jantar_brightness);
         }
 		
@@ -130,17 +136,17 @@ then
     switch(actionName) {
 	
         case "SHORT_PRESSED": {
-			logInfo("switches.rules", "Short pressed switch_sala_estar");
-			handleShortPress.apply(hue_sala_estar_switch, EnableLightOnMotion_SalaDeEstar);
+			logDebug("switches.rules", "Short pressed switch_sala_estar");
+			handleShortPress.apply(hue_sala_estar_switch, EnableLightOnMotion_SalaDeEstar, hue_sala_estar_alert, true);
         }
 		
         case "DOUBLE_PRESSED": {
-			logInfo("switches.rules", "Double pressed switch_sala_estar");
+			logDebug("switches.rules", "Double pressed switch_sala_estar");
 			handleDoublePress.apply(hue_sala_estar_switch, hue_sala_estar_brightness, hue_sala_estar_alert, EnableLightOnMotion_SalaDeEstar);
         }
 		
         case "LONG_PRESSED": {
-			logInfo("switches.rules", "Long pressed switch_sala_estar");
+			logDebug("switches.rules", "Long pressed switch_sala_estar");
 			handleLongPress.apply(hue_sala_estar_brightness);
         }
 		
